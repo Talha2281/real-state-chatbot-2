@@ -1,7 +1,2 @@
 streamlit
-requests
-langchain
-faiss-cpu
-sentence-transformers
-numpy
-langchain-community
+
