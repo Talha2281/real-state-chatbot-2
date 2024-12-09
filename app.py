@@ -1,11 +1,15 @@
 import streamlit as st
 
-# Dummy data for properties
+# Expanded dummy data for properties
 dummy_properties = [
-    {"title": "2 BHK Apartment in Zurich", "price": "$250,000", "location": "Zurich", "type": "Apartment"},
-    {"title": "3 BHK Villa in Geneva", "price": "$1,000,000", "location": "Geneva", "type": "Villa"},
-    {"title": "1 BHK Studio in Basel", "price": "$150,000", "location": "Basel", "type": "Studio"},
-    {"title": "Office Space in Zurich", "price": "$500,000", "location": "Zurich", "type": "Commercial"},
+    {"title": "2 BHK Apartment in Zurich", "price": 250000, "location": "Zurich", "type": "Apartment"},
+    {"title": "3 BHK Villa in Geneva", "price": 1000000, "location": "Geneva", "type": "Villa"},
+    {"title": "1 BHK Studio in Basel", "price": 150000, "location": "Basel", "type": "Studio"},
+    {"title": "Office Space in Lausanne", "price": 500000, "location": "Lausanne", "type": "Commercial"},
+    {"title": "4 BHK House in Bern", "price": 750000, "location": "Bern", "type": "Villa"},
+    {"title": "Luxury Penthouse in Lucerne", "price": 1200000, "location": "Lucerne", "type": "Apartment"},
+    {"title": "Cozy Studio in Zurich", "price": 200000, "location": "Zurich", "type": "Studio"},
+    {"title": "Retail Space in Geneva", "price": 600000, "location": "Geneva", "type": "Commercial"},
 ]
 
 def main():
@@ -46,32 +50,47 @@ def main():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        location = st.selectbox("Location", ["All", "Zurich", "Geneva", "Basel"])
+        location = st.selectbox("Location", ["All"] + list(set([prop["location"] for prop in dummy_properties])))
     with col2:
-        price_range = st.selectbox("Price Range", ["All", "$100,000-$200,000", "$200,000-$500,000", "$500,000+"])
+        price_range = st.selectbox("Price Range", [
+            "All",
+            "100,000 - 200,000",
+            "200,000 - 500,000",
+            "500,000 - 1,000,000",
+            "1,000,000+"
+        ])
     with col3:
-        property_type = st.selectbox("Property Type", ["All", "Apartment", "Villa", "Studio", "Commercial"])
+        property_type = st.selectbox("Property Type", ["All"] + list(set([prop["type"] for prop in dummy_properties])))
 
-    # Filter results
+    # Filter results based on user selection
     st.subheader("Search Results")
-    filtered_properties = [
-        prop for prop in dummy_properties
-        if (location == "All" or prop["location"] == location) and
-           (price_range == "All" or (
-               price_range == "$100,000-$200,000" and "$100,000" <= prop["price"] <= "$200,000") or
-               (price_range == "$200,000-$500,000" and "$200,000" <= prop["price"] <= "$500,000") or
-               (price_range == "$500,000+" and "$500,000" <= prop["price"])
-           ) and
-           (property_type == "All" or prop["type"] == property_type)
-    ]
+    filtered_properties = []
+    for prop in dummy_properties:
+        # Location filter
+        if location != "All" and prop["location"] != location:
+            continue
+        # Price range filter
+        if price_range != "All":
+            if price_range == "100,000 - 200,000" and not (100000 <= prop["price"] <= 200000):
+                continue
+            if price_range == "200,000 - 500,000" and not (200000 <= prop["price"] <= 500000):
+                continue
+            if price_range == "500,000 - 1,000,000" and not (500000 <= prop["price"] <= 1000000):
+                continue
+            if price_range == "1,000,000+" and prop["price"] < 1000000:
+                continue
+        # Property type filter
+        if property_type != "All" and prop["type"] != property_type:
+            continue
+        # Add property to filtered results
+        filtered_properties.append(prop)
 
+    # Display results
     if filtered_properties:
         for prop in filtered_properties:
-            st.write(f"**{prop['title']}** - {prop['price']} - {prop['location']} - {prop['type']}")
+            st.write(f"**{prop['title']}** - ${prop['price']} - {prop['location']} - {prop['type']}")
     else:
         st.write("No properties match your search criteria. Please adjust the filters and try again.")
 
 if __name__ == "__main__":
     main()
-
-      
