@@ -27,7 +27,7 @@ if "show_results" not in st.session_state:
 
 def main():
     # Page settings
-    st.set_page_config(page_title="Immo Green AI Chatbot", layout="wide")
+    st.set_page_config(page_title="Immo Green AI Chatbot", "page_icon="🏡", layout="wide")
 
     # Ask user if they are logged in
     st.title("👋 Welcome to Immo Green AI!")
