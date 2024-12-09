@@ -14,14 +14,16 @@ dummy_properties = [
     {"title": "Classic Villa", "price": 900000, "location": "Thun", "type": "Villa"},
 ]
 
-# Dummy knowledge for chatbot
-knowledge_base = {
-    "what is real estate": "Real estate involves the buying, selling, and renting of land, buildings, and homes.",
-    "what services do you offer": "We offer services like property consultations, buying and selling assistance, rental management, and green energy solutions.",
-    "how to sell a property": "To sell a property, you can list it on our platform by registering and providing the necessary details.",
-    "what is the price range in zurich": "Property prices in Zurich typically range from $200,000 to $1,200,000, depending on the type and location.",
-    "what is green energy": "Green energy refers to energy sources that are renewable and environmentally friendly, like solar, wind, and hydropower.",
-}
+# Initialize session state for filters
+if "location" not in st.session_state:
+    st.session_state["location"] = "All"
+if "price_range" not in st.session_state:
+    st.session_state["price_range"] = "All"
+if "property_type" not in st.session_state:
+    st.session_state["property_type"] = "All"
+if "show_results" not in st.session_state:
+    st.session_state["show_results"] = False
+
 
 def main():
     # Page settings
@@ -49,57 +51,82 @@ def main():
     st.subheader("Chat with Immo Green AI")
     query = st.text_input("Ask your question:")
     if query:
-        response = knowledge_base.get(query.lower(), "I'm sorry, I don't have information on that topic. Please ask something else.")
-        st.write(f"**Answer**: {response}")
+        st.write(f"**Answer**: {get_chat_response(query)}")
 
     # Search functionality
     st.subheader("Search for Properties")
-    if st.button("Search for Properties"):
-        col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-        with col1:
-            location = st.selectbox("Location", ["All"] + list(set([prop["location"] for prop in dummy_properties])))
-        with col2:
-            price_range = st.selectbox("Price Range", [
-                "All",
-                "100,000 - 200,000",
-                "200,000 - 500,000",
-                "500,000 - 1,000,000",
-                "1,000,000+"
-            ])
-        with col3:
-            property_type = st.selectbox("Property Type", ["All"] + list(set([prop["type"] for prop in dummy_properties])))
+    with col1:
+        st.session_state["location"] = st.selectbox(
+            "Location", ["All"] + list(set([prop["location"] for prop in dummy_properties])),
+            key="location_selector"
+        )
+    with col2:
+        st.session_state["price_range"] = st.selectbox(
+            "Price Range",
+            ["All", "100,000 - 200,000", "200,000 - 500,000", "500,000 - 1,000,000", "1,000,000+"],
+            key="price_selector"
+        )
+    with col3:
+        st.session_state["property_type"] = st.selectbox(
+            "Property Type",
+            ["All"] + list(set([prop["type"] for prop in dummy_properties])),
+            key="type_selector"
+        )
 
-        if st.button("Apply Filters"):
-            # Filter results
-            filtered_properties = []
-            for prop in dummy_properties:
-                # Location filter
-                if location != "All" and prop["location"] != location:
-                    continue
-                # Price range filter
-                if price_range != "All":
-                    if price_range == "100,000 - 200,000" and not (100000 <= prop["price"] <= 200000):
-                        continue
-                    if price_range == "200,000 - 500,000" and not (200000 <= prop["price"] <= 500000):
-                        continue
-                    if price_range == "500,000 - 1,000,000" and not (500000 <= prop["price"] <= 1000000):
-                        continue
-                    if price_range == "1,000,000+" and prop["price"] < 1000000:
-                        continue
-                # Property type filter
-                if property_type != "All" and prop["type"] != property_type:
-                    continue
-                # Add property to filtered results
-                filtered_properties.append(prop)
+    # Apply filters
+    if st.button("Apply Filters"):
+        st.session_state["show_results"] = True
 
-            # Display results
-            st.subheader("Search Results")
-            if filtered_properties:
-                for prop in filtered_properties:
-                    st.write(f"**{prop['title']}** - ${prop['price']} - {prop['location']} - {prop['type']}")
-            else:
-                st.write("No properties match your search criteria. Please adjust the filters and try again.")
+    # Show results
+    if st.session_state["show_results"]:
+        display_filtered_properties()
+
+
+def get_chat_response(query):
+    """Dummy knowledge base responses."""
+    knowledge_base = {
+        "what is real estate": "Real estate involves the buying, selling, and renting of land, buildings, and homes.",
+        "what services do you offer": "We offer services like property consultations, buying and selling assistance, rental management, and green energy solutions.",
+        "how to sell a property": "To sell a property, you can list it on our platform by registering and providing the necessary details.",
+        "what is the price range in zurich": "Property prices in Zurich typically range from $200,000 to $1,200,000, depending on the type and location.",
+        "what is green energy": "Green energy refers to energy sources that are renewable and environmentally friendly, like solar, wind, and hydropower.",
+    }
+    return knowledge_base.get(query.lower(), "I'm sorry, I don't have information on that topic. Please ask something else.")
+
+
+def display_filtered_properties():
+    """Filter and display property results based on user selection."""
+    filtered_properties = []
+    for prop in dummy_properties:
+        # Location filter
+        if st.session_state["location"] != "All" and prop["location"] != st.session_state["location"]:
+            continue
+        # Price range filter
+        if st.session_state["price_range"] != "All":
+            if st.session_state["price_range"] == "100,000 - 200,000" and not (100000 <= prop["price"] <= 200000):
+                continue
+            if st.session_state["price_range"] == "200,000 - 500,000" and not (200000 <= prop["price"] <= 500000):
+                continue
+            if st.session_state["price_range"] == "500,000 - 1,000,000" and not (500000 <= prop["price"] <= 1000000):
+                continue
+            if st.session_state["price_range"] == "1,000,000+" and prop["price"] < 1000000:
+                continue
+        # Property type filter
+        if st.session_state["property_type"] != "All" and prop["type"] != st.session_state["property_type"]:
+            continue
+        # Add property to filtered results
+        filtered_properties.append(prop)
+
+    # Display results
+    st.subheader("Search Results")
+    if filtered_properties:
+        for prop in filtered_properties:
+            st.write(f"**{prop['title']}** - ${prop['price']} - {prop['location']} - {prop['type']}")
+    else:
+        st.write("No properties match your search criteria. Please adjust the filters and try again.")
+
 
 if __name__ == "__main__":
     main()
